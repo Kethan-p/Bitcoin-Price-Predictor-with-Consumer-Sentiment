@@ -35,6 +35,8 @@ from tensorflow import keras
 from keras.layers import Bidirectional, Dropout, Activation, Dense, LSTM
 from tensorflow.python.keras.layers import CuDNNLSTM
 from cryptocmd import CmcScraper
+from dotenv import load_dotenv
+
 
 
 
@@ -49,12 +51,12 @@ def bs4_realtimeprice(coin):
   soup = BeautifulSoup(HTML.text, 'html.parser') 
   text = soup.find("div", attrs={'class':'BNeawe iBp4i AP7Wnd'}).find("div", attrs={'class':'BNeawe iBp4i AP7Wnd'}).text
   return text
-
+load_dotenv()
 #Twitter API credentials
-consumerKey = 'NNvBcHARwXjzUq5I78w0AsXcX'
-consumerSecret = 'DPjbMdQqkpRUW9IY0aYwF3UmITHsbuegVBZpbmo84z2qPrSLx7'
-accessToken = '1130203516109242368-QWSHnJJ5HVUSzhjuR2WtjKHejofQe9'
-accessTokenSecret = '4yKzuQDwxYfFrutzYVqfut7bUoZzy889lGPXct5z3WQdG'
+consumerKey = os.getenv("CONSUMERKEY")
+consumerSecret = os.getenv("CONSUMERSECRET")
+accessToken = os.getenv("ACCESSTOKEN")
+accessTokenSecret = os.getenv("ACCESSTOKENSECRET")
 
 #Create the authentication object
 authenticate = tweepy.OAuthHandler(consumerKey,consumerSecret)
