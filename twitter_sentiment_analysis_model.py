@@ -101,41 +101,6 @@ for x in range(8):
     day+=1
 
 
-  """
- if day <= 31:
-  posts = api.search(q = "bitcoin", count = 70, lang = "en", result_type = 'mixed', since = "2022-0" + str(month) +"-" + str(day), until = "2022-0" + str(month) +"-" + str(day+1), tweet_mode = 'extended')
-  for tweet in posts[0:70]:
-    since_date =  "2022-0"+ str(month) +"-" + str(day)
-    #posts_total.append([since_date.split(" ")[0], tweet.full_text])
-    posts_total.append([tweet.created_at, tweet.full_text])
-    day += 1
- else:
-    day = 1
-    month += 1
-    posts = api.search(q = "bitcoin", count = 70, lang = "en", result_type = 'mixed', since = "2022-0" + str(month) +"-" + str(day), until = "2022-0" + str(month) +"-" + str(day+1), tweet_mode = 'extended')
-    for tweet in posts[0:70]:
-      since_date =  "2022-0"+ str(month) +"-" + str(day)
-      #posts_total.append([since_date.split(" ")[0], tweet.full_text])
-      posts_total.append([tweet.created_at, tweet.full_text])
-"""
-
-#posts = api.search(q = "bitcoin", count = 100, lang = "en", result_type = 'mixed', since = "2022-02-0" + str(day), until = "2022-02-0" + str(day + 1), tweet_mode = 'extended')
-
-#dfTotal = pd.DataFrame([posts_total[0]], columns=['Tweet', 'Tweet'])
-#dfTotal
-
-#generate posts array that includes tweets from a 1-day span
-#using getTime, stack posts array with the times of each tweet in that array
-#using a for loop, check with split[" "]  to see the first two digits of the second split to check the hour
-#if hour is +1, then split the array there
-
-#print 8 most recent tweets until ______
-#for tweet in posts_total[0:600]:
-  #print(tweet)
-
-#Create dataframe with "Tweet" column
-#df = pd.DataFrame(, columns=['Tweets'])
-#df.insert(0, "Date", posts_total[0] , True)
 df = pd.DataFrame(posts_total)
 df.columns = ['Date','Tweet']
 
@@ -210,57 +175,7 @@ Dataset.columns = ['Date','Polarity']
 Dataset
 
 #Get bitcoin prices - Delta Price, Open, Close, High, Low
-'''
-base_url = "https://api.kucoin.com"
-coin_pair = "BTC-USDT" #BTC-USDTo
-frequency = "1day" 
 
-
-now_is = int(time()) - (60*60*24*2)#get timestamp date of today in seconds
-print(now_is)
-days = 7
-days_delta = 60 * 60 * 24 * days 
-start_At = now_is - days_delta
-price_url = f"/api/v1/market/candles?type={frequency}&symbol={coin_pair}&startAt={start_At}&endAt={now_is}"
-
-prices = requests.get(base_url+price_url).json()
-print(prices) #entire dict of prices for 7days
-price_arr = []
-'''
-
-'''
-prices = requests.get(base_url+price_url).json()
-for item in prices['data']:
-  #convert date from timestamp to Y M D
-  date_converted = datetime.fromtimestamp(int(item[0])).strftime("%m-%d-%Y")
-  price_arr.append(item[2])
-
-#add prices to dataframe
-btc_close_arr = []
-close_arr = []
-count = 1
-lastval = len(price_arr)
-#parsing for only closing price
-
-
-print(price_arr)
-Dataset['BTC_Price'] = price_arr[len(price_arr)-9:len(price_arr)-1]
-display(Dataset)
-#priceDF = pd.DataFrame(price_dict,index=["Bitcoin Price"]).T
-#priceDF["Bitcoin Price"] = priceDF["Bitcoin Price"].astype(float)
-
-#convert dates to datetime from object
-
-#reverse dates
-#priceDF = priceDF.iloc[::-1]
-#priceDF.columns = ['Date','BTC_Price']
-#print(priceDF)
-#append dataframes
-#extracted_col = priceDF['Bitcoin Price']
-#display(extracted_col)
-#Dataset.join(priceDF)
-#print(Dataset)
-'''
 arr = []
 for date in Dataset_Dates:
   tempDate = str(date)
@@ -292,68 +207,6 @@ Dataset
 model_dataframe = Dataset.iloc[:,1:]
 model_dataframe
 
-#Start of LSTM
-
-"""
-model_dataframe = pd.DataFrame(Dataset['Polarity'])
-model_dataframe['BTC_Price'] = price_arr[len(price_arr)-9:len(price_arr)-1]
-
-#Create Dataset
-
-model_dataset = model_dataframe.values
-model_dataset = model_dataset.astype('float32')
-#print(model_dataset)
-
-
-#Convert to dataset matrix method
-def create_dataset(dataset, look_back=1):
-	dataX, dataY = [], []
-	for i in range(len(dataset)-look_back-1):
-		a = dataset[i:(i+look_back), 0]
-		dataX.append(a)
-		dataY.append(dataset[i + look_back, 0])
-	return np.array(dataX), np.array(dataY)
- 
-look_back = 1
-
-#Split into Train and Test Data
-train = model_dataset[0:5,:]
-test = model_dataset[5:8,:]
-#print(test)
-
-#reshape matrix into x = t and y = t+1
-trainX, trainY = create_dataset(train, look_back)
-testX, testY = create_dataset(test, look_back)
-
-trainX = np.reshape(trainX, (trainX.shape[0], 1, trainX.shape[1]))
-testX = np.reshape(testX, (testX.shape[0], 1, testX.shape[1]))
-
-#Create LSTM
-model = Sequential()
-model.add(LSTM(4, input_shape=(1, look_back)))
-model.add(Dense(1))
-model.compile(loss='mean_squared_error', optimizer='adam')
-model.fit(trainX, trainY, epochs=100, batch_size=5, verbose=2)
-
-
-#generate predictions
-trainPredict = model.predict(trainX)
-testPredict = model.predict(testX)
-
-#plot data
-trainPredictPlot = np.empty_like(model_dataset)
-trainPredictPlot[:, :] = np.nan
-trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
-# shift test predictions for plotting
-testPredictPlot = np.empty_like(model_dataset)
-testPredictPlot[:, :] = np.nan
-testPredictPlot[len(trainPredict)+(look_back*2)+1:len(model_dataset)-1, :] = testPredict
-# plot baseline and predictions
-plt.plot(model_dataset)
-plt.plot(trainPredictPlot)
-plt.plot(testPredictPlot)
-plt.show()
-"""
 
 
 
